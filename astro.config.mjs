@@ -2,13 +2,10 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 
-// Dirección del sitio: en Vercel se toma sola del dominio de producción.
-// Mientras no esté conectado porunmundomejor.org.ar, usa la dirección .vercel.app
-// (así las vistas previas de WhatsApp y redes encuentran las imágenes);
-// cuando se conecte el dominio en Vercel, pasa a usarlo automáticamente.
-const SITE = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : 'https://porunmundomejor.org.ar';
+// Dirección pública del sitio: se usa para las vistas previas de WhatsApp y redes,
+// las direcciones canónicas, el mapa del sitio y los datos para Google.
+// Cuando se conecte el dominio definitivo (porunmundomejor.org.ar), cambiarla acá.
+const SITE = 'https://porunmundomejor.vercel.app';
 
 export default defineConfig({
   site: SITE,

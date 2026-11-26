@@ -42,4 +42,4 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Sitemap: https://porunmundomejor.org.ar/sitemap-index.xml
+Sitemap: https://porunmundomejor.vercel.app/sitemap-index.xml
