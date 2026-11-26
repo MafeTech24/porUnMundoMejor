@@ -1,0 +1,181 @@
+---
+// Layout principal — Fundación Por Un Mundo Mejor
+// Incluye: head completo (SEO, Open Graph, datos estructurados), header, footer, WhatsApp flotante, toggle dark mode
+import '../styles/global.css';
+import { globalSchema, SITE_NAME, GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION } from '../lib/seo';
+
+export interface Props {
+  /** Título corto de la página; se le agrega " | Fundación Por Un Mundo Mejor" */
+  title: string;
+  /** Título completo opcional (reemplaza al armado automático, ej. en la home) */
+  seoTitle?: string;
+  description?: string;
+  ogImage?: string;
+  ogImageAlt?: string;
+  ogType?: string;
+  canonical?: string;
+  /** Datos estructurados propios de la página (objeto o lista de objetos, sin @context) */
+  schema?: object | object[];
+  /** true = la página no se indexa en buscadores */
+  noindex?: boolean;
+  /** Metadatos de artículo (solo para ogType="article") */
+  article?: {
+    publishedTime?: Date;
+    modifiedTime?: Date;
+    author?: string;
+    section?: string;
+    tags?: string[];
+  };
+}
+
+const {
+  title,
+  seoTitle,
+  description = 'Fundación para el tratamiento y prevención de las adicciones en Córdoba, Argentina. Casi 20 años acompañando a personas y familias con un equipo interdisciplinario.',
+  ogImage = '/images/og-image.jpg',
+  ogImageAlt = 'Fundación Por Un Mundo Mejor — tratamiento y prevención de adicciones en Córdoba',
+  ogType = 'website',
+  canonical,
+  schema,
+  noindex = false,
+  article,
+} = Astro.props;
+
+const fullTitle = seoTitle ?? `${title} | ${SITE_NAME}`;
+
+const canonicalURL = canonical
+  ? new URL(canonical, Astro.site)
+  : new URL(Astro.url.pathname, Astro.site);
+
+const ogImageURL = new URL(ogImage, Astro.site);
+// Imágenes para compartir preparadas en 1200×630 (la general y las de /images/og/)
+const ogImageIsDefault = ogImage === '/images/og-image.jpg' || ogImage.startsWith('/images/og/');
+
+// Grafo de datos estructurados: organización + sitio (siempre) + lo propio de la página
+const pageSchema = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [...globalSchema(), ...pageSchema],
+};
+---
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a9e80" />
+
+  <!-- SEO -->
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+  <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
+  <meta name="author" content={article?.author ?? SITE_NAME} />
+
+  <!-- Geolocalización (SEO local) -->
+  <meta name="geo.region" content="AR-X" />
+  <meta name="geo.placename" content="Córdoba, Argentina" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content={ogType} />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImageURL} />
+  {ogImageIsDefault && <meta property="og:image:width" content="1200" />}
+  {ogImageIsDefault && <meta property="og:image:height" content="630" />}
+  <meta property="og:image:alt" content={ogImageAlt} />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:locale" content="es_AR" />
+  <meta property="og:site_name" content={SITE_NAME} />
+  {article?.publishedTime && <meta property="article:published_time" content={article.publishedTime.toISOString()} />}
+  {article?.modifiedTime && <meta property="article:modified_time" content={article.modifiedTime.toISOString()} />}
+  {article?.author && <meta property="article:author" content={article.author} />}
+  {article?.section && <meta property="article:section" content={article.section} />}
+  {article?.tags?.map((tag) => <meta property="article:tag" content={tag} />)}
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImageURL} />
+  <meta name="twitter:image:alt" content={ogImageAlt} />
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <!-- Verificación de buscadores (se completa en src/lib/seo.ts) -->
+  {GOOGLE_SITE_VERIFICATION && <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />}
+  {BING_SITE_VERIFICATION && <meta name="msvalidate.01" content={BING_SITE_VERIFICATION} />}
+
+  <!-- Mapa del sitio -->
+  <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+
+  <!-- Resumen del sitio para buscadores con IA -->
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="Resumen del sitio para IA" />
+
+  <!-- Contenido extra de cada página (ej. redirecciones) -->
+  <slot name="head" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" sizes="48x48" />
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- Google Fonts: Plus Jakarta Sans (headings) + Inter (body/UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Dark mode: apply class before paint to avoid flash -->
+  <script is:inline>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+</head>
+<body class="font-sans antialiased transition-colors duration-300" style="background-color: var(--background); color: var(--foreground);">
+
+  <!-- Skip to content (accesibilidad) -->
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:rounded-full focus:font-semibold" style="background: var(--primary); color: var(--primary-fg);">
+    Ir al contenido principal
+  </a>
+
+  <!-- Header global -->
+  <slot name="header">
+    <header-placeholder></header-placeholder>
+  </slot>
+
+  <!-- Main content -->
+  <main id="main-content">
+    <slot />
+  </main>
+
+  <!-- Footer global -->
+  <slot name="footer">
+    <footer-placeholder></footer-placeholder>
+  </slot>
+
+  <!-- WhatsApp flotante -->
+  <a
+    href="https://wa.me/5493516716580?text=Hola%2C%20necesito%20informaci%C3%B3n%20sobre%20un%20tratamiento"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Contactar por WhatsApp"
+    class="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-primary hover:scale-110 animate-float transition-all duration-300"
+    style="background: #25d366; box-shadow: 0 8px 24px -8px rgba(37,211,102,0.5);"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  </a>
+
+</body>
+</html>

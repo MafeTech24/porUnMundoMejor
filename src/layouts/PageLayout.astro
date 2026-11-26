@@ -1,0 +1,20 @@
+---
+// PageLayout.astro — Layout completo con Header y Footer incluidos
+// Usar este layout en todas las páginas .astro
+import Layout from './Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+import type { Props as LayoutProps } from './Layout.astro';
+
+export type Props = LayoutProps;
+
+const props = Astro.props;
+---
+
+<Layout {...props}>
+  <slot name="head" slot="head" />
+  <Header slot="header" />
+  <slot />
+  <Footer slot="footer" />
+</Layout>
